@@ -1,0 +1,17 @@
+# Windows ARM64 (win-arm64) ONLY — this is NOT a project requirement.
+#
+# The MCP SDK depends (transitively, via pyjwt[crypto]) on `cryptography`.
+# cryptography >= 47 ships no prebuilt win-arm64 wheels (the last one with a
+# win-arm64 wheel is 46.0.3). On a clean win-arm64 box pip therefore falls back
+# to a Rust source build that needs MSVC's link.exe and usually fails.
+#
+# Pin to the last version that has a win-arm64 wheel so the install stays
+# compile-free. x64 / macOS / Linux all have 49.x wheels and do NOT need this —
+# which is exactly why it lives here and not in pyproject.toml.
+#
+# Usage:
+#   python -m pip install -e . -c constraints-winarm64.txt --only-binary=cryptography
+#
+# (--only-binary is required: with just the version cap, pip can still pick an
+#  sdist and rebuild.)
+cryptography<47

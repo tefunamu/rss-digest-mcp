@@ -181,6 +181,29 @@ The suite covers HTML cleaning, UTC timestamp handling, keyword matching,
 the recency window (including undated items), and the dedup/sort/cap pipeline —
 all with a fixed clock for determinism.
 
+## Troubleshooting
+
+### MCP client shows "Failed to connect"
+The launch command isn't runnable. Either install `uv` (`pip install uv`) so
+`uvx` works, or use the no-uv path: `pip install -e .` then register the server
+as `python -m rss_digest_mcp`. After changing the client config, start a **new**
+session — existing sessions don't pick up new servers.
+
+### Windows ARM64: `cryptography` fails to build (`link.exe` not found)
+The MCP SDK depends — transitively, via `pyjwt[crypto]` — on `cryptography`,
+which ships **no prebuilt win-arm64 wheels for ≥ 47**. pip then attempts a Rust
+source build that needs MSVC and fails on a clean machine. Install pinned to the
+last version that has a win-arm64 wheel (46.0.3):
+
+```bash
+python -m pip install -e . -c constraints-winarm64.txt --only-binary=cryptography
+```
+
+This is an **environment-specific** workaround — x64 / macOS / Linux all have
+current wheels and are unaffected — so the pin lives in
+[`constraints-winarm64.txt`](constraints-winarm64.txt), **not** in
+`pyproject.toml`.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
