@@ -66,6 +66,9 @@ keywords pricing, funding."*
 
 > Use the **absolute** path to this repo in every example below. A wrong/relative
 > path is the #1 reason the server silently fails to start.
+>
+> **Windows ARM64 users:** install the package with the constraints file first —
+> see [Troubleshooting › Windows ARM64](#windows-arm64-cryptography-fails-to-build-linkexe-not-found).
 
 ### Claude Code
 ```bash
