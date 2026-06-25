@@ -4,8 +4,15 @@ Run with:  python3 -m unittest discover -s tests -v
 """
 
 import calendar
+import os
+import sys
 import time
 import unittest
+
+# Make the src-layout package importable when running the tests directly
+# (`python -m unittest discover -s tests`) without installing or setting
+# PYTHONPATH. The core logic is dependency-free, so tests run with stdlib only.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 from rss_digest_mcp.core import (
     Item,
