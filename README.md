@@ -192,20 +192,34 @@ The launch command isn't runnable. Either install `uv` (`pip install uv`) so
 as `python -m rss_digest_mcp`. After changing the client config, start a **new**
 session — existing sessions don't pick up new servers.
 
-### Windows ARM64: `cryptography` fails to build (`link.exe` not found)
-The MCP SDK depends — transitively, via `pyjwt[crypto]` — on `cryptography`,
-which ships **no prebuilt win-arm64 wheels for ≥ 47**. pip then attempts a Rust
-source build that needs MSVC and fails on a clean machine. Install pinned to the
-last version that has a win-arm64 wheel (46.0.3):
+### Windows ARM64: `cryptography` fails to build / `uvx` won't connect
+On native win-arm64, `cryptography` ≥ 47 ships **no prebuilt wheel**, so pip
+falls back to a Rust source build that needs MSVC `link.exe` and fails on a clean
+machine (`cryptography` arrives transitively via the MCP SDK → `pyjwt[crypto]`).
+The `uvx --from .` launch in [Configuration](#configuration) **also fails here**,
+because uvx builds the package in a fresh isolated env and *ignores the
+constraints file*, re-triggering that same source build.
+
+Use the **pip + `python -m`** path instead:
 
 ```bash
+# 1. install, pinned to cryptography's last win-arm64 wheel (46.0.3)
 python -m pip install -e . -c constraints-winarm64.txt --only-binary=cryptography
+
+# 2. register with the module launcher (NOT uvx)
+claude mcp add -s user rss-digest -- python -m rss_digest_mcp
+claude mcp list      # rss-digest ... ✓ connected
 ```
 
-This is an **environment-specific** workaround — x64 / macOS / Linux all have
-current wheels and are unaffected — so the pin lives in
-[`constraints-winarm64.txt`](constraints-winarm64.txt), **not** in
-`pyproject.toml`.
+Notes:
+- The pin is **environment-specific** — x64 / macOS / Linux have current wheels —
+  so it lives in [`constraints-winarm64.txt`](constraints-winarm64.txt), **not**
+  in `pyproject.toml` (which would needlessly hold those platforms back).
+- `claude mcp add` records the **absolute path** of the `python` you used. If you
+  later move or replace that interpreter, re-run `claude mcp add`.
+- If you must keep using `uvx`, pass the constraints via the `UV_CONSTRAINT`
+  environment variable — but that still rebuilds the isolated env, so the direct
+  `python -m` launch is lighter and more reliable.
 
 ## License
 
