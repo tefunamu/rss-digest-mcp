@@ -156,6 +156,50 @@ Works with any RSS/Atom feed. `feedparser` decodes legacy Japanese encodings
 - Qiita (popular) — `https://qiita.com/popular-items/feed`
 - GitHub repo releases — `https://github.com/<owner>/<repo>/releases.atom`
 
+## Usage examples
+
+Once connected, you drive it in **plain language** — your MCP client turns the
+request into the right tool call. Examples (paste into Claude / Cursor / Cline):
+
+**Competitive / industry monitoring**
+> Use `get_digest` on `https://hnrss.org/frontpage` and `https://techcrunch.com/feed/`,
+> keywords `pricing, layoffs, funding`, last 24 hours, then summarize the themes.
+
+**Japanese tech news, compact summaries**
+> `get_digest` on `https://zenn.dev/feed` and `https://qiita.com/popular-items/feed`,
+> keyword `AI`, last 24h, `summary_max_chars` 200.
+
+**Just the latest from one source**
+> `fetch_feed` `https://news.ycombinator.com/rss`, limit 10.
+
+**Onboard a feed list, then digest it**
+> `load_opml` `./feeds.opml`, then `get_digest` on those URLs with keyword `AI`.
+
+A real run — 2 feeds, keyword `AI`, last 24h, `summary_max_chars=200` — returns:
+
+```json
+{
+  "count": 5,
+  "feeds_requested": 2,
+  "feeds_ok": 2,
+  "errors": [],
+  "items": [
+    {
+      "title": "OpenAI unveils its first custom chip, built by Broadcom",
+      "link": "https://techcrunch.com/2026/06/24/openai-unveils-its-first-custom-chip-built-by-broadcom/",
+      "summary": "Announcement: …",
+      "source": "Hacker News: Front Page",
+      "published": "2026-06-24T17:47:00Z",
+      "published_ts": 1782323220.0
+    }
+    // … 4 more, newest first, deduped across both feeds
+  ]
+}
+```
+
+The client (the LLM) chooses the feeds + keywords and reads this back to you as a
+brief; the tool just fetches, filters and dedups.
+
 ## Architecture
 
 ```
