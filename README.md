@@ -30,29 +30,53 @@ request away.
 
 ## Quick Start
 
-Requires Python ≥ 3.10. The fastest path uses [`uv`](https://docs.astral.sh/uv/)
-(no manual venv, no global installs):
+> **This is a tool server, not a CLI reader.** It does not print feeds on its
+> own. It exposes tools that an **MCP client (Claude Code, Claude Desktop,
+> Cursor, Cline) calls for you**. You get RSS digests by connecting it to a
+> client and *asking in plain language* — not by running a command here.
+
+So the only required step is **[Configuration](#configuration)** (connect it to
+your client). The steps below are an **optional** sanity check.
+
+Requires Python ≥ 3.10; the client launches the server via
+[`uv`](https://docs.astral.sh/uv/).
 
 ```bash
-# 1. clone
+# (optional) clone + run the tests — stdlib only, no install, proves it works
 git clone https://github.com/tefunamu/rss-digest-mcp.git
 cd rss-digest-mcp
-
-# 2. run the tests (stdlib only — proves the core logic works)
-python3 -m unittest discover -s tests -v
-
-# 3. run the server (stdio) — usually your MCP client launches this for you
-uvx --from . rss-digest-mcp
+python3 -m unittest discover -s tests -v        # 16 tests, expect "OK"
 ```
 
-That's it. There is no config file, no database to provision, and no key to
-paste.
+You do **not** need to start the server by hand — your MCP client does that.
+If you just want to confirm it boots, `uvx --from . rss-digest-mcp` will sit
+silently waiting for a client to speak MCP over stdio (that silence is correct —
+there is no output until a client calls a tool). Press Ctrl-C to stop.
+
+Once connected (next section), ask your client something like:
+
+> *"Use get_digest on `https://hnrss.org/frontpage` and `https://zenn.dev/feed`,
+> keywords AI, last 24 hours."*
 
 ## Configuration
 
 The server speaks MCP over **stdio**. Add one of the blocks below to your
 client, then ask: *"Use get_digest on these feeds for the last 24h with
 keywords pricing, funding."*
+
+> Use the **absolute** path to this repo in every example below. A wrong/relative
+> path is the #1 reason the server silently fails to start.
+
+### Claude Code
+```bash
+# from anywhere — register the server (use the absolute repo path)
+claude mcp add rss-digest -- uvx --from /ABSOLUTE/PATH/TO/rss-digest-mcp rss-digest-mcp
+# add -s user to make it available in every project:
+#   claude mcp add -s user rss-digest -- uvx --from /ABSOLUTE/PATH/TO/rss-digest-mcp rss-digest-mcp
+
+claude mcp list            # should show  rss-digest: ✓ connected
+```
+Then in a new session: *"Use get_digest on https://zenn.dev/feed, keywords AI, last 24h."*
 
 ### Claude Desktop
 `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) /
@@ -99,6 +123,15 @@ keywords pricing, funding."*
 ```
 
 ## Tools provided
+
+> **What these tools are *not*:** `get_digest` is a *deterministic filter* over
+> the feeds **you give it** — it matches keywords as plain substrings and sorts
+> by recency. It does **not** search the web, and it does **not** infer which
+> feeds a topic belongs to. Choosing the right feed URLs, turning a question into
+> keywords, and judging whether a hit is actually relevant is the **client's
+> (the LLM's) job** — the tool just fetches, filters and dedups. So "find what
+> Japanese electronics makers said about pricing" only works if the client first
+> supplies those makers' feed URLs and sensible keywords.
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
