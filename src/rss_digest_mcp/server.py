@@ -24,7 +24,7 @@ from typing import Optional
 import feedparser
 from mcp.server.fastmcp import FastMCP
 
-from .core import Item, digest, to_item
+from .core import Item, digest, to_item, truncate_summary
 
 # A feed that hangs should never hang the whole tool call.
 _DEFAULT_TIMEOUT = 10
@@ -57,6 +57,7 @@ def get_digest(
     keywords: Optional[list[str]] = None,
     hours: int = 24,
     max_items: int = 30,
+    summary_max_chars: int = 0,
 ) -> dict:
     """Build one competitive-intelligence digest across many RSS/Atom feeds.
 
@@ -67,6 +68,9 @@ def get_digest(
         hours: only keep items published within the last N hours (default 24).
             Undated items are kept. Pass 0 to disable the time filter.
         max_items: cap on returned items after dedup + sort (default 30).
+        summary_max_chars: optionally shorten each item's summary to this many
+            characters (with an ellipsis) to keep the digest compact. Default 0
+            = no truncation (full summaries).
 
     Returns a dict with the matched ``items`` (newest first, deduped by link),
     a ``count``, how many feeds succeeded, and any per-feed ``errors``.
@@ -83,6 +87,9 @@ def get_digest(
             errors.append({"feed": url, "error": str(exc)[:200]})
 
     result = digest(all_items, keywords or [], hours, max_items)
+    if summary_max_chars and summary_max_chars > 0:
+        for it in result:
+            it.summary = truncate_summary(it.summary, summary_max_chars)
     return {
         "count": len(result),
         "feeds_requested": len(feeds),
@@ -93,11 +100,17 @@ def get_digest(
 
 
 @mcp.tool()
-def fetch_feed(url: str, limit: int = 20) -> dict:
-    """Fetch a single RSS/Atom feed and return its latest items (newest first)."""
+def fetch_feed(url: str, limit: int = 20, summary_max_chars: int = 0) -> dict:
+    """Fetch a single RSS/Atom feed and return its latest items (newest first).
+
+    ``summary_max_chars`` optionally shortens each summary (default 0 = full).
+    """
     items, feed_title, err = _fetch_one(url)
     items.sort(key=lambda i: (i.published_ts or 0.0), reverse=True)
     capped = items[: limit if limit and limit > 0 else len(items)]
+    if summary_max_chars and summary_max_chars > 0:
+        for it in capped:
+            it.summary = truncate_summary(it.summary, summary_max_chars)
     return {
         "feed_title": feed_title,
         "feed_url": url,

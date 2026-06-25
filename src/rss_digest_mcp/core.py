@@ -44,6 +44,18 @@ def clean_text(html: str) -> str:
     return _WS_RE.sub(" ", _TAG_RE.sub(" ", html)).strip()
 
 
+def truncate_summary(text: str, max_chars: int) -> str:
+    """Shorten ``text`` to ``max_chars`` and append an ellipsis.
+
+    Opt-in: ``max_chars <= 0`` (the default everywhere) returns the text
+    unchanged. Trailing whitespace before the cut is trimmed so the ellipsis
+    sits flush against the last word.
+    """
+    if not max_chars or max_chars <= 0 or len(text) <= max_chars:
+        return text
+    return text[:max_chars].rstrip() + "…"
+
+
 def entry_timestamp(entry: Any) -> Optional[float]:
     """Best-effort UTC epoch seconds from a feedparser-style entry.
 

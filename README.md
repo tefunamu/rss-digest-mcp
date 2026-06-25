@@ -138,8 +138,8 @@ Then in a new session: *"Use get_digest on https://zenn.dev/feed, keywords AI, l
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `get_digest` | `feeds: string[]`, `keywords?: string[]`, `hours: int = 24`, `max_items: int = 30` | Combined digest across all feeds: matched items (newest first, deduped by link), `count`, `feeds_ok`, per-feed `errors`. Empty `keywords` = pure recency digest; `hours = 0` disables the time filter. |
-| `fetch_feed` | `url: string`, `limit: int = 20` | Latest items of one feed (newest first), plus `feed_title` and any parse `error`. |
+| `get_digest` | `feeds: string[]`, `keywords?: string[]`, `hours: int = 24`, `max_items: int = 30`, `summary_max_chars: int = 0` | Combined digest across all feeds: matched items (newest first, deduped by link), `count`, `feeds_ok`, per-feed `errors`. Empty `keywords` = pure recency digest; `hours = 0` disables the time filter; `summary_max_chars > 0` shortens each summary (default `0` = full). |
+| `fetch_feed` | `url: string`, `limit: int = 20`, `summary_max_chars: int = 0` | Latest items of one feed (newest first), plus `feed_title` and any parse `error`. `summary_max_chars > 0` shortens summaries. |
 | `load_opml` | `path: string` | Feed list (`title` + `xmlUrl`) parsed from a local OPML export, for bulk onboarding. Reads only the file you point at. |
 
 Each returned item has: `title`, `link`, `summary` (HTML-stripped),

@@ -21,6 +21,7 @@ from rss_digest_mcp.core import (
     entry_timestamp,
     matches_keywords,
     to_item,
+    truncate_summary,
     within_hours,
 )
 
@@ -50,6 +51,19 @@ class CleanTextTests(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual(clean_text(""), "")
+
+
+class TruncateSummaryTests(unittest.TestCase):
+    def test_zero_or_negative_is_noop(self):
+        self.assertEqual(truncate_summary("hello world", 0), "hello world")
+        self.assertEqual(truncate_summary("hello world", -5), "hello world")
+
+    def test_shorter_than_limit_unchanged(self):
+        self.assertEqual(truncate_summary("short", 100), "short")
+
+    def test_truncates_with_ellipsis_and_trims(self):
+        # 10-char cut of "the quick brown" -> "the quick " -> rstrip -> "the quick…"
+        self.assertEqual(truncate_summary("the quick brown fox", 10), "the quick…")
 
 
 class TimestampTests(unittest.TestCase):
